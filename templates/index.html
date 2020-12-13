@@ -6,6 +6,15 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <link href="/static/css/style.css" rel="stylesheet">
         <title>Scanner</title>
+        <script>
+            // init
+            window.onload = function(){
+                host_data = JSON.parse(localStorage.getItem("host_data"))
+                console.log("host_Data")
+                console.log(host_data)
+                refresh_host_list(host_data)
+            }
+        </script>
     </head>
     <body>
         <div class="main">
@@ -13,10 +22,16 @@
                 <div class="left">
                     <h2>host scan</h2>
                     <ul>
-                        <button onclick="scan('arp')">
+                        <button onclick="host_scan('sP')">
                             arp-scan
                         </button>
-
+                        <button onclick="host_scan('sn')">
+                            ping-scan
+                        </button>
+                        <button onclick="
+                        host_scan('Pn')">
+                            no-ping-scan
+                        </button>
                     </ul>
                 </div>
                 <div class="right">
@@ -26,40 +41,108 @@
             <div class="cont">
                 <div class="left">
                     <ul>
-                        <li>
-                            <button>
-                                 window 10 is scanned
-                            </button>
-                        </li>
-                        <li>
-                            <button>
-                               linux ubuntu is scanned
-                            </button>
-                        </li>
+
+
                     </ul>
                 </div>
                 <div class="right">
+                    <ul>
+                        <li>
+                            <strong>
+                                IP
+                            </strong>
+                            :
+                            <span>
 
+                            </span>
+                        </li>
+                        <li>
+                            <strong>
+                                MAC ADDR
+                            </strong>
+                            :
+                            <span>
+                                
+                            </span>
+                        </li>
+                        <li>
+                            <strong>
+                                COMPANY
+                            </strong>
+                            :
+                            <span>
+
+                            </span>
+                        </li>
+
+                        <li>
+                            <strong>PORTS</strong>
+                            <p>
+
+                            </p>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
         <script>
-            function scan(scan_type) {
+            const host_scan = function(scan_type) {
+                document.querySelector(".left h2").innerText="host scan (wait...)"
+
                 var url = '/scan/host_scan';
                 var data = {"scan_type": scan_type};
 
                 fetch(url, {
                   method: 'POST',
-                  body: JSON.stringify(data), // data can be `string` or {object}!
+                  body: JSON.stringify(data),
                   headers:{
                     'Content-Type': 'application/json'
                   }
                 }).then(res => {
-                    console.log(res)
+                    document.querySelector(".left h2").innerText="host scan"
+                    let hostData = res.json()
+                    hostData.then((data) => {
+                        refresh_host_list(data)
+                        // save data
+                        localStorage.setItem('host_data', JSON.stringify(data));
+
+                    })
                 })
                 .catch(err =>{
+                    document.querySelector(".left h2").innerText="host scan"
+                    console.log("this is error")
                     console.log(err)
                 })
+            }
+
+            const refresh_host_list = function(data) {
+                console.log(data)
+
+                new Promise((resolve, reject) => {
+                    html =""
+                     data.forEach((element,index,array) => {
+                        html += `
+                            <li>
+                                <button onClick="about_host('`+element.ip+`')">
+                                    `+element.ip+`
+                                </button>
+                            </li>
+                        `
+                        console.log("running")
+                        if (index === array.length -1){
+                            console.log("done")
+                            resolve(html);
+                        }
+                    })
+                }).then((html)=>{
+                    document.querySelector(".main .cont .left ul").innerHTML = html
+                })
+
+            }
+
+            const about_host = function (ip){
+                console.log("this is about_host")
+                console.log(ip)
             }
         </script>
     </body>

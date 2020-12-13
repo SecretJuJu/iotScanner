@@ -32,14 +32,13 @@ button:focus {outline:0;}
     width: 50%;
     height: 100%;
     display: flex;
-
     flex-flow : column;
 }
 .cont {
     height : 100%;
     background: #eee;
     display : flex;
-    flex-flow : column;
+    flex-flow : row;
 }
 
 .cont .left {
@@ -68,4 +67,11 @@ button:focus {outline:0;}
     color : #efefef;
     background : #566270;
     cursor : pointer;
+}
+
+.cont .right {
+    display: flex;
+    width: 40%;
+    padding: 2% 5% 3%;
+    height: 94%;
 }
