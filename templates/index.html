@@ -15,33 +15,33 @@
                 refresh_host_list(host_data)
             }
         </script>
+        <script src="/static/js/index.js"></script>
     </head>
     <body>
         <div class="main">
             <div class="header">
                 <div class="left">
                     <h2>host scan</h2>
-                    <ul>
-                        <button onclick="host_scan('sP')">
-                            arp-scan
-                        </button>
-                        <button onclick="host_scan('sn')">
-                            ping-scan
-                        </button>
-                        <button onclick="
-                        host_scan('Pn')">
-                            no-ping-scan
-                        </button>
-                    </ul>
+                    <div>
+                        <ul>
+                            <button onclick="host_scan()">
+                                arp-scan
+                            </button>
+                        </ul>
+                        <div>
+                            <input type="text" name="ip-start" pattern="^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$">
+                            -
+                            <input type="text" name="ip-last" pattern="^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$">
+                        </div>
+                    </div>
                 </div>
                 <div class="right">
-                    <h2>Detail scan</h2>
+                    <h2>Detail</h2>
                 </div>
             </div>
             <div class="cont">
                 <div class="left">
                     <ul>
-
 
                     </ul>
                 </div>
@@ -62,7 +62,7 @@
                             </strong>
                             :
                             <span>
-                                
+
                             </span>
                         </li>
                         <li>
@@ -85,65 +85,5 @@
                 </div>
             </div>
         </div>
-        <script>
-            const host_scan = function(scan_type) {
-                document.querySelector(".left h2").innerText="host scan (wait...)"
-
-                var url = '/scan/host_scan';
-                var data = {"scan_type": scan_type};
-
-                fetch(url, {
-                  method: 'POST',
-                  body: JSON.stringify(data),
-                  headers:{
-                    'Content-Type': 'application/json'
-                  }
-                }).then(res => {
-                    document.querySelector(".left h2").innerText="host scan"
-                    let hostData = res.json()
-                    hostData.then((data) => {
-                        refresh_host_list(data)
-                        // save data
-                        localStorage.setItem('host_data', JSON.stringify(data));
-
-                    })
-                })
-                .catch(err =>{
-                    document.querySelector(".left h2").innerText="host scan"
-                    console.log("this is error")
-                    console.log(err)
-                })
-            }
-
-            const refresh_host_list = function(data) {
-                console.log(data)
-
-                new Promise((resolve, reject) => {
-                    html =""
-                     data.forEach((element,index,array) => {
-                        html += `
-                            <li>
-                                <button onClick="about_host('`+element.ip+`')">
-                                    `+element.ip+`
-                                </button>
-                            </li>
-                        `
-                        console.log("running")
-                        if (index === array.length -1){
-                            console.log("done")
-                            resolve(html);
-                        }
-                    })
-                }).then((html)=>{
-                    document.querySelector(".main .cont .left ul").innerHTML = html
-                })
-
-            }
-
-            const about_host = function (ip){
-                console.log("this is about_host")
-                console.log(ip)
-            }
-        </script>
     </body>
 </html>

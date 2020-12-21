@@ -24,6 +24,12 @@ button:focus {outline:0;}
     display: flex;
     flex-flow: column;
 }
+
+.header .left>div{
+    display: flex;
+    justify-content: space-between;
+}
+
 .header h2 {
     height : 30px;
     text-align : center;
