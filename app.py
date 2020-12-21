@@ -19,23 +19,8 @@ def index():
 @app.route("/scan/host_scan",methods=["POST"])
 def host_scan():
     print("host scanning")
-    scan_type = (request.json)['scan_type']
-    network = "192.168.0.0/24"
-    #print("scan type : "+str(scan_type))
-
-    res = None
-    if(scan_type == "sP"): # arp scan
-        print("arp scan")
-        scanner.host_scan(host=network,argument="-sP")
-    elif(scan_type == "sn"): # ping scan
-        print("ping scan")
-        scanner.host_scan(host=network, argument="-sn")
-    elif(scan_type == "Pn"):
-        print("no ping scan")
-        scanner.host_scan(host=network, argument="-Pn")
-
-
-    print("-- response --")
+    ip_range = (request.json)['ip_range']
+    scanner.host_scan(host=ip_range,argument="-sP")
     return jsonify(scanner.get_all_host())
 
 @app.route("/mac_match")
@@ -52,6 +37,10 @@ def get_all_mac_addr():
 def exploit_detail():
     return render_template("exploit_detail.html",data="this is data")
 
+@app.route("/host/getAllHost")
+def getAllHost():
+    print(scanner.get_all_host())
+    return jsonify(scanner.get_all_host())
 
 @app.after_request
 def set_response_headers(response):
