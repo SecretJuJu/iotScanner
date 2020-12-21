@@ -37,6 +37,7 @@ def host_scan():
 
     print("-- response --")
     return jsonify(scanner.get_all_host())
+
 @app.route("/mac_match")
 def get_all_mac_addr():
     macAddr = request.args.get("mac")
@@ -46,6 +47,10 @@ def get_all_mac_addr():
     for r in rows:
         print(r)
     return "success"
+
+@app.route("/exploit_detail")
+def exploit_detail():
+    return render_template("exploit_detail.html",data="this is data")
 
 
 @app.after_request
