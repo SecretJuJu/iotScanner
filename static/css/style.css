@@ -27,7 +27,7 @@ button:focus {outline:0;}
 
 .header .left>div{
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
 }
 
 .header h2 {

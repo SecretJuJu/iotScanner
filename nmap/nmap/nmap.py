@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -18,8 +18,9 @@ Contributors:
 * Johan Lundberg
 * Thomas D. maaaaz
 * Robert Bost
- 
-Licence : GPL v3 or any later version
+* David Peltier
+
+Licence: GPL v3 or any later version for python-nmap
 
 
 This program is free software: you can redistribute it and/or modify
@@ -36,26 +37,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+**************
+IMPORTANT NOTE
+**************
+
+The Nmap Security Scanner used by python-nmap is distributed
+under it's own licence that you can find at https://svn.nmap.org/nmap/COPYING
+
+Any redistribution of python-nmap along with the Nmap Security Scanner
+must conform to the Nmap Security Scanner licence
+
 """
 
 
 __author__ = 'Alexandre Norman (norman@xael.org)'
-__version__ = '0.4.1'
-__last_modification__ = '2015.08.21'
+__version__ = '0.6.1'
+__last_modification__ = '2016.07.29'
 
 
-import collections
 import csv
 import io
 import os
 import re
 import shlex
-import string
 import subprocess
 import sys
-import types
 from xml.etree import ElementTree as ET
-
 
 try:
     from multiprocessing import Process
@@ -65,13 +72,14 @@ except ImportError:
 
 ############################################################################
 
+
 class PortScanner(object):
     """
     PortScanner class allows to use nmap from python
 
     """
-    
-    def __init__(self, nmap_search_path=('nmap','/usr/bin/nmap','/usr/local/bin/nmap','/sw/bin/nmap','/opt/local/bin/nmap') ):
+
+    def __init__(self, nmap_search_path=('nmap', '/usr/bin/nmap', '/usr/local/bin/nmap', '/sw/bin/nmap', '/opt/local/bin/nmap')):
         """
         Initialize PortScanner module
 
@@ -92,23 +100,39 @@ class PortScanner(object):
         self.__process = None
 
         # regex used to detect nmap (http or https)
-        regex = re.compile('Nmap version [0-9]*\.[0-9]*[^ ]* \( http(|s)://.* \)')
-        # launch 'nmap -V', we wait after 'Nmap version 5.0 ( http://nmap.org )'
+        regex = re.compile(
+            'Nmap version [0-9]*\.[0-9]*[^ ]* \( http(|s)://.* \)'
+        )
+        # launch 'nmap -V', we wait after
+        #'Nmap version 5.0 ( http://nmap.org )'
         # This is for Mac OSX. When idle3 is launched from the finder, PATH is not set so nmap was not found
         for nmap_path in nmap_search_path:
             try:
-                p = subprocess.Popen([nmap_path, '-V'], bufsize=10000, stdout=subprocess.PIPE, close_fds=True)
+                if sys.platform.startswith('freebsd') \
+                   or sys.platform.startswith('linux') \
+                   or sys.platform.startswith('darwin'):
+                    p = subprocess.Popen([nmap_path, '-V'],
+                                         bufsize=10000,
+                                         stdout=subprocess.PIPE,
+                                         close_fds=True)
+                else:
+                    p = subprocess.Popen([nmap_path, '-V'],
+                                         bufsize=10000,
+                                         stdout=subprocess.PIPE)
+
             except OSError:
                 pass
             else:
-                self._nmap_path = nmap_path # save path 
+                self._nmap_path = nmap_path  # save path
                 break
         else:
-            raise PortScannerError('nmap program was not found in path. PATH is : {0}'.format(os.getenv('PATH')))            
+            raise PortScannerError(
+                'nmap program was not found in path. PATH is : {0}'.format(
+                    os.getenv('PATH')
+                )
+            )
 
-
-            
-        self._nmap_last_output = bytes.decode(p.communicate()[0]) # store stdout
+        self._nmap_last_output = bytes.decode(p.communicate()[0])  # sav stdout
         for line in self._nmap_last_output.split(os.linesep):
             if regex.match(line) is not None:
                 is_nmap_found = True
@@ -122,14 +146,15 @@ class PortScanner(object):
                 if rv is not None and rsv is not None:
                     # extract version/subversion
                     self._nmap_version_number = int(line[rv.start():rv.end()])
-                    self._nmap_subversion_number = int(line[rsv.start()+1:rsv.end()])
+                    self._nmap_subversion_number = int(
+                        line[rsv.start()+1:rsv.end()]
+                    )
                 break
 
-        if is_nmap_found == False:
+        if not is_nmap_found:
             raise PortScannerError('nmap program was not found in path')
 
         return
-
 
     def get_nmap_last_output(self):
         """
@@ -140,8 +165,6 @@ class PortScanner(object):
         """
         return self._nmap_last_output
 
-
-
     def nmap_version(self):
         """
         returns nmap version if detected (int version, int subversion)
@@ -150,18 +173,20 @@ class PortScanner(object):
         """
         return (self._nmap_version_number, self._nmap_subversion_number)
 
-
-
     def listscan(self, hosts='127.0.0.1'):
         """
         do not scan but interpret target hosts and return a list a hosts
         """
-        assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
-        
-        self.scan(hosts, arguments='-sL')
+        assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))  # noqa
+        output = self.scan(hosts, arguments='-sL')
+        # Test if host was IPV6
+        try:
+            if 'looks like an IPv6 target specification' in output['nmap']['scaninfo']['error'][0]:  # noqa
+                self.scan(hosts, arguments='-sL -6')
+        except KeyError:
+            pass
+
         return self.all_hosts()
-
-
 
     def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV', sudo=False):
         """
@@ -169,7 +194,8 @@ class PortScanner(object):
 
         May raise PortScannerError exception if nmap output was not xml
 
-        Test existance of the following key to know if something went wrong : ['nmap']['scaninfo']['error']
+        Test existance of the following key to know
+        if something went wrong : ['nmap']['scaninfo']['error']
         If not present, everything was ok.
 
         :param hosts: string for hosts as nmap use it 'scanme.nmap.org' or '198.116.0-255.1-127' or '216.163.128.20/20'
@@ -177,23 +203,25 @@ class PortScanner(object):
         :param arguments: string of arguments for nmap '-sU -sX -sC'
         :param sudo: launch nmap with sudo if True
 
-        :returns: scan_result as dictionnary 
+        :returns: scan_result as dictionnary
         """
         if sys.version_info[0]==2:
-            assert type(hosts) in (str, unicode), 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
+            assert type(hosts) in (str, unicode), 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))  # noqa
+            assert type(ports) in (str, unicode, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))  # noqa
+            assert type(arguments) in (str, unicode), 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))  # noqa
         else:
-            assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
-        assert type(ports) in (str, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))
-        assert type(arguments) is str, 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))
+            assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))  # noqa
+            assert type(ports) in (str, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))  # noqa
+            assert type(arguments) is str, 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))  # noqa
 
         for redirecting_output in ['-oX', '-oA']:
-            assert not redirecting_output in arguments, 'Xml output can\'t be redirected from command line.\nYou can access it after a scan using:\nnmap.nm.get_nmap_last_output()'
+            assert redirecting_output not in arguments, 'Xml output can\'t be redirected from command line.\nYou can access it after a scan using:\nnmap.nm.get_nmap_last_output()'  # noqa
 
         h_args = shlex.split(hosts)
         f_args = shlex.split(arguments)
-        
+
         # Launch scan
-        args = [self._nmap_path, '-oX', '-'] + h_args + ['-p', ports]*(ports!=None) + f_args
+        args = [self._nmap_path, '-oX', '-'] + h_args + ['-p', ports]*(ports is not None) + f_args
         if sudo:
             args = ['sudo'] + args
 
@@ -218,24 +246,28 @@ class PortScanner(object):
         # keeps on trucking.
 
         nmap_err_keep_trace = []
+        nmap_warn_keep_trace = []
         if len(nmap_err) > 0:
-            regex_warning = re.compile('^Warning: .*')
+            regex_warning = re.compile('^Warning: .*', re.IGNORECASE)
             for line in nmap_err.split(os.linesep):
                 if len(line) > 0:
                     rgw = regex_warning.search(line)
                     if rgw is not None:
-                        sys.stderr.write(line+os.linesep)
-                        pass
+                        # sys.stderr.write(line+os.linesep)
+                        nmap_warn_keep_trace.append(line+os.linesep)
                     else:
-                        #raise PortScannerError(nmap_err)
+                        # raise PortScannerError(nmap_err)
                         nmap_err_keep_trace.append(nmap_err)
 
-        return self.analyse_nmap_xml_scan(nmap_xml_output = self._nmap_last_output,
-                                          nmap_err = nmap_err,
-                                          nmap_err_keep_trace = nmap_err_keep_trace)
+        return self.analyse_nmap_xml_scan(
+            nmap_xml_output=self._nmap_last_output,
+            nmap_err=nmap_err,
+            nmap_err_keep_trace=nmap_err_keep_trace,
+            nmap_warn_keep_trace=nmap_warn_keep_trace
+        )
 
 
-    def analyse_nmap_xml_scan(self, nmap_xml_output=None, nmap_err='', nmap_err_keep_trace=''):
+    def analyse_nmap_xml_scan(self, nmap_xml_output=None, nmap_err='', nmap_err_keep_trace='', nmap_warn_keep_trace=''):
         """
         Analyses NMAP xml scan ouput
 
@@ -309,6 +341,10 @@ class PortScanner(object):
         if len(nmap_err_keep_trace)>0:
             scan_result['nmap']['scaninfo']['error'] = nmap_err_keep_trace
 
+        # if there was a warning
+        if len(nmap_warn_keep_trace)>0:
+            scan_result['nmap']['scaninfo']['warning'] = nmap_warn_keep_trace
+
         # info about scan
         for dsci in dom.findall('scaninfo'):
             scan_result['nmap']['scaninfo'][dsci.get('protocol')] = {                
@@ -336,11 +372,18 @@ class PortScanner(object):
                 host = dhost.find('address').get('addr')
                 
             hostnames = []
-            for dhostname in dhost.findall('hostnames/hostname'):
-                hostnames.append({
-                    'name':dhostname.get('name'),
-                    'type':dhostname.get('type'),
+            if len(dhost.findall('hostnames/hostname')) > 0:
+                for dhostname in dhost.findall('hostnames/hostname'):
+                    hostnames.append({
+                        'name':dhostname.get('name'),
+                        'type':dhostname.get('type'),
                     })
+            else:
+                hostnames.append({
+                    'name':'',
+                    'type':'',
+                })
+
             scan_result['scan'][host] = PortScannerHostDict({'hostnames': hostnames})
 
             scan_result['scan'][host]['addresses'] = address_block
@@ -364,7 +407,7 @@ class PortScanner(object):
                 # reason
                 reason = dport.find('state').get('reason')
                 # name, product, version, extra info and conf if any
-                name,product,version,extrainfo,conf,cpe = '','','','','',''
+                name = product = version = extrainfo = conf = cpe = ''
                 for dname in dport.findall('service'):
                     name = dname.get('name')
                     if dname.get('product'):
@@ -381,15 +424,15 @@ class PortScanner(object):
                 # store everything
                 if not proto in list(scan_result['scan'][host].keys()):
                     scan_result['scan'][host][proto] = {}
-                    
+
                 scan_result['scan'][host][proto][port] = {'state': state,
-                                                  'reason': reason,
-                                                  'name': name,
-                                                  'product': product,
-                                                  'version': version,
-                                                  'extrainfo': extrainfo,
-                                                  'conf': conf,
-                                                  'cpe': cpe}
+                                                          'reason': reason,
+                                                          'name': name,
+                                                          'product': product,
+                                                          'version': version,
+                                                          'extrainfo': extrainfo,
+                                                          'conf': conf,
+                                                          'cpe': cpe}
                 script_id = ''
                 script_out = ''
                 # get script output if any
@@ -422,56 +465,81 @@ class PortScanner(object):
                             }
                         )
 
+            ## <osmatch name="Juniper SA4000 SSL VPN gateway (IVE OS 7.0)" accuracy="98" line="36241">
+            ## <osclass type="firewall" vendor="Juniper" osfamily="IVE OS" osgen="7.X"
+            ## accuracy="98"><cpe>cpe:/h:juniper:sa4000</cpe><cpe>cpe:/o:juniper:ive_os:7</cpe></osclass>
+            ## </osmatch>
+            ## <osmatch name="Cymphonix EX550 firewall" accuracy="98" line="17929">
+            ## <osclass type="firewall" vendor="Cymphonix" osfamily="embedded"
+            ## accuracy="98"><cpe>cpe:/h:cymphonix:ex550</cpe></osclass>
+            ## </osmatch>
             for dos in dhost.findall('os'):
+                osmatch = []
+                portused = []
+                for dportused in dos.findall('portused'):
+                    # <portused state="open" proto="tcp" portid="443"/>
+                    state = dportused.get('state')
+                    proto = dportused.get('proto')
+                    portid = dportused.get('portid')
+                    portused.append({
+                        'state': state,
+                        'proto': proto,
+                        'portid': portid,
+                    })
+
+                scan_result['scan'][host]['portused'] = portused
+
+                    
                 for dosmatch in dos.findall('osmatch'):
+                    # <osmatch name="Linux 3.7 - 3.15" accuracy="100" line="52790">
+                    name = ''
+                    accuracy = ''
+                    line = ''
+                    try:
+                        name = dosmatch.get('name')
+                        accuracy = dosmatch.get('accuracy')
+                        line = dosmatch.get('line')
+                    except AttributeError:
+                        pass
+
+                    osclass = []
                     for dosclass in dosmatch.findall('osclass'):
                         # <osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="2.6.X" accuracy="98"/>
-                       ostype = ''
-                       vendor = ''
-                       osfamily = ''
-                       osgen = ''
-                       accuracy = ''
-                       try:
-                           ostype = dosclass.get('type')
-                           vendor = dosclass.get('vendor')
-                           osfamily = dosclass.get('osfamily')
-                           osgen = dosclass.get('osgen')
-                           accuracy = dosclass.get('accuracy')
-                       except AttributeError:
-                           pass
-       
-                       scan_result['scan'][host]['osclass'] = {
-                           'type': ostype,
-                           'vendor': vendor,
-                           'osfamily': osfamily,
-                           'osgen': osgen,
-                           'accuracy': accuracy
-                       }
-       
+                        ostype = ''
+                        vendor = ''
+                        osfamily = ''
+                        osgen = ''
+                        accuracy = ''
+                        try:
+                            ostype = dosclass.get('type')
+                            vendor = dosclass.get('vendor')
+                            osfamily = dosclass.get('osfamily')
+                            osgen = dosclass.get('osgen')
+                            accuracy = dosclass.get('accuracy')
+                        except AttributeError:
+                            pass
 
+                        cpe = []
+                        for dcpe in dosclass.findall('cpe'):
+                            cpe.append(dcpe.text)                                           
+                        
+                        osclass.append({
+                            'type': ostype,
+                            'vendor': vendor,
+                            'osfamily': osfamily,
+                            'osgen': osgen,
+                            'accuracy': accuracy,
+                            'cpe': cpe,
+                        })
 
-            for dport in dhost.findall('osclass'):
-                # <osclass name="Linux 2.6.31" accuracy="98" line="30043"/>
-                name = ''
-                accuracy = ''
-                line = ''
-                try:
-                    name = dport.get('name')
-                    accuracy = dport.get('accuracy')
-                    line = dport.get('line')
-                except AttributeError:
-                    pass
-                if not 'osclass' in list(scan_result['scan'][host].keys()):
-                    scan_result['scan'][host]['osclass'] = []
-
-                scan_result['scan'][host]['osclass'].append(
-                    {
+                    osmatch.append({
                         'name': name,
                         'accuracy': accuracy,
                         'line': line,
-                        }
-                    )
-
+                        'osclass': osclass
+                    })
+                else:
+                    scan_result['scan'][host]['osmatch'] = osmatch
 
             for dport in dhost.findall('osfingerprint'):
                 # <osfingerprint fingerprint="OS:SCAN(V=5.50%D=11/[...]S)&#xa;"/>
@@ -482,7 +550,6 @@ class PortScanner(object):
                     pass
 
                 scan_result['scan'][host]['fingerprint'] = fingerprint
-
 
 
         self._scan_result = scan_result # store for later use
@@ -568,10 +635,10 @@ class PortScanner(object):
         returns CSV output as text
 
         Example :
-        host;protocol;port;name;state;product;extrainfo;reason;version;conf;cpe
-        127.0.0.1;tcp;22;ssh;open;OpenSSH;protocol 2.0;syn-ack;5.9p1 Debian 5ubuntu1;10;cpe
-        127.0.0.1;tcp;23;telnet;closed;;;conn-refused;;3;
-        127.0.0.1;tcp;24;priv-mail;closed;;;conn-refused;;3;
+        host;hostname;hostname_type;protocol;port;name;state;product;extrainfo;reason;version;conf;cpe
+        127.0.0.1;localhost;PTR;tcp;22;ssh;open;OpenSSH;protocol 2.0;syn-ack;5.9p1 Debian 5ubuntu1;10;cpe
+        127.0.0.1;localhost;PTR;tcp;23;telnet;closed;;;conn-refused;;3;
+        127.0.0.1;localhost;PTR;tcp;24;priv-mail;closed;;;conn-refused;;3;
         """
         assert 'scan' in self._scan_result, 'Do a scan before trying to get result !'
 
@@ -583,6 +650,8 @@ class PortScanner(object):
         csv_ouput = csv.writer(fd, delimiter=';')
         csv_header = [
             'host',
+            'hostname',
+            'hostname_type',
             'protocol',
             'port',
             'name',
@@ -604,18 +673,23 @@ class PortScanner(object):
                 lport = list(self[host][proto].keys())
                 lport.sort()
                 for port in lport:
-                    csv_row = [
-                        host, proto, port, 
-                        self[host][proto][port]['name'],
-                        self[host][proto][port]['state'],
-                        self[host][proto][port]['product'],
-                        self[host][proto][port]['extrainfo'],
-                        self[host][proto][port]['reason'],
-                        self[host][proto][port]['version'],
-                        self[host][proto][port]['conf'],
-                        self[host][proto][port]['cpe']
+                    hostname = ''
+                    for h in self[host]['hostnames']:
+                        hostname = h['name']
+                        hostname_type = h['type']
+                        csv_row = [
+                            host, hostname, hostname_type,
+                            proto, port,
+                            self[host][proto][port]['name'],
+                            self[host][proto][port]['state'],
+                            self[host][proto][port]['product'],
+                            self[host][proto][port]['extrainfo'],
+                            self[host][proto][port]['reason'],
+                            self[host][proto][port]['version'],
+                            self[host][proto][port]['conf'],
+                            self[host][proto][port]['cpe']
                         ]
-                    csv_ouput.writerow(csv_row)
+                        csv_ouput.writerow(csv_row)
 
         return fd.getvalue()
 
@@ -629,12 +703,14 @@ def __scan_progressive__(self, hosts, ports, arguments, callback, sudo):
         try:
             scan_data = self._nm.scan(host, ports, arguments, sudo)
         except PortScannerError:
-            pass
+            scan_data = None
+
         if callback is not None:
             callback(host, scan_data)
     return
 
 ############################################################################
+
 
 class PortScannerAsync(object):
     """
@@ -642,7 +718,6 @@ class PortScannerAsync(object):
     for each host scanned, callback is called with scan result for the host
 
     """
-
     def __init__(self):
         """
         Initialize the module
@@ -655,22 +730,28 @@ class PortScannerAsync(object):
         self._nm = PortScanner()
         return
 
-
     def __del__(self):
         """
         Cleanup when deleted
 
         """
-        if self._process is not None and self._process.is_alive():
-            self._process.terminate()
-        return
+        if self._process is not None:
+            try:
+                if self._process.is_alive():
+                    self._process.terminate()
+            except AssertionError:
+                # Happens on python3.4
+                # when using PortScannerAsync twice in a row
+                pass
 
+        self._process = None
+        return
 
     def scan(self, hosts='127.0.0.1', ports=None, arguments='-sV', callback=None, sudo=False):
         """
         Scan given hosts in a separate process and return host by host result using callback function
 
-        PortScannerError exception from standard nmap is catched and you won't know about it
+        PortScannerError exception from standard nmap is catched and you won't know about but get None as scan_data
 
         :param hosts: string for hosts as nmap use it 'scanme.nmap.org' or '198.116.0-255.1-127' or '216.163.128.20/20'
         :param ports: string for ports as nmap use it '22,53,110,143-4564'
@@ -679,9 +760,15 @@ class PortScannerAsync(object):
         :param sudo: launch nmap with sudo if true
         """
 
-        assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
-        assert type(ports) in (str, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))
-        assert type(arguments) is str, 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))
+        if sys.version_info[0]==2:
+            assert type(hosts) in (str, unicode), 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
+            assert type(ports) in (str, unicode, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))
+            assert type(arguments) in (str, unicode), 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))
+        else:
+            assert type(hosts) is str, 'Wrong type for [hosts], should be a string [was {0}]'.format(type(hosts))
+            assert type(ports) in (str, type(None)), 'Wrong type for [ports], should be a string [was {0}]'.format(type(ports))
+            assert type(arguments) is str, 'Wrong type for [arguments], should be a string [was {0}]'.format(type(arguments))
+            
         assert callable(callback) or callback is None, 'The [callback] {0} should be callable or None.'.format(str(callback))
 
         for redirecting_output in ['-oX', '-oA']:
@@ -696,7 +783,6 @@ class PortScannerAsync(object):
         self._process.start()
         return
 
-
     def stop(self):
         """
         Stop the current scan process
@@ -706,7 +792,6 @@ class PortScannerAsync(object):
             self._process.terminate()
         return
 
-
     def wait(self, timeout=None):
         """
         Wait for the current scan process to finish, or timeout
@@ -714,13 +799,10 @@ class PortScannerAsync(object):
         :param timeout: default = None, wait timeout seconds 
 
         """
-
         assert type(timeout) in (int, type(None)), 'Wrong type for [timeout], should be an int or None [was {0}]'.format(type(timeout))
 
         self._process.join(timeout)
         return
-
-    
 
     def still_scanning(self):
         """
@@ -732,7 +814,6 @@ class PortScannerAsync(object):
         except:
             return False
 
-    
 
 ############################################################################
 
@@ -782,26 +863,21 @@ class PortScannerYield(PortScannerAsync):
             try:
                 scan_data = self._nm.scan(host, ports, arguments, sudo)
             except PortScannerError:
-                pass
+                scan_data = None
             yield (host, scan_data)
         return
-
-
 
     def stop(self):
         pass
 
     def wait(self, timeout=None):
         pass
-    
 
     def still_scanning(self):
         pass
 
-    
 
 ############################################################################
-    
 
 
 class PortScannerHostDict(dict):
@@ -827,7 +903,10 @@ class PortScannerHostDict(dict):
             if h['type'] == 'user':
                 return h['name']
         else:
-            return self['hostnames'][0]['name']
+            if len(self['hostnames']) > 0 and 'name' in self['hostnames'][0]:
+                return self['hostnames'][0]['name']
+            else:
+                return ''
 
         return hostname
 
@@ -851,11 +930,10 @@ class PortScannerHostDict(dict):
         :returns: a list of all scanned protocols
 
         """
-        lp = list(self.keys())
-        lp.remove('addresses')
-        lp.remove('hostnames')
-        lp.remove('status')
-        lp.remove('vendor')
+        def _proto_filter(x):
+            return x in ['ip', 'tcp', 'udp', 'sctp']
+
+        lp = list(filter(_proto_filter, list(self.keys())))
         lp.sort()
         return lp
 
@@ -1031,14 +1109,14 @@ def __get_last_online_version():
     """
     Gets last python-nmap published version
     
-    WARNING : it does an http connection to http://xael.org/norman/python/python-nmap/python-nmap_CURRENT_VERSION.txt
+    WARNING : it does an http connection to http://xael.org/pages/python-nmap/python-nmap_CURRENT_VERSION.txt
 
-    :returns: a string which indicate last published version (example :'0.2.3')
+    :returns: a string which indicate last published version (example :'0.4.3')
 
     """
     import http.client
     conn = http.client.HTTPConnection("xael.org")
-    conn.request("GET", "/norman/python/python-nmap/python-nmap_CURRENT_VERSION.txt")
+    conn.request("GET", "/pages/python-nmap/python-nmap_CURRENT_VERSION.txt")
     online_version = bytes.decode(conn.getresponse().read()).strip()
     return online_version
 
@@ -1054,15 +1132,17 @@ def convert_nmap_output_to_encoding(value, code="ascii"):
 
     :returns: scan_result as dictionnary with new encoding
     """
+    # import pdb;pdb.set_trace()
     new_value = {}
     for k in value:
-        if type(value[k]) in [dict, nmap.PortScannerHostDict] :
-            new_value[k] = convert_to_encoding(value[k], code)
+        if type(value[k]) in [dict, PortScannerHostDict]:
+            new_value[k] = convert_nmap_output_to_encoding(value[k], code)
         else:
-            new_value[k] = value[k].encode(code)
+            if type(value[k]) is list:
+                #import pdb;pdb.set_trace()
+                new_value[k] = [convert_nmap_output_to_encoding(x, code) for x in value[k]]
+            else:
+                new_value[k] = value[k].encode(code)
     return new_value
 
-
-
-#<EOF>######################################################################
-
+# <EOF>######################################################################

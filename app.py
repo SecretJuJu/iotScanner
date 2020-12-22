@@ -23,7 +23,7 @@ def host_scan():
     scanner.host_scan(host=ip_range,argument="-sP")
     return jsonify(scanner.get_all_host())
 
-@app.route("/mac_match")
+@app.route("/host/vender")
 def get_all_mac_addr():
     macAddr = request.args.get("mac")
     sql = "select * from MacVender where macAddr = ?"
@@ -31,16 +31,21 @@ def get_all_mac_addr():
     rows = macMapCur.fetchall()
     for r in rows:
         print(r)
-    return "success"
+    return jsonify(rows)
 
-@app.route("/exploit_detail")
+@app.route("/exploit/detail")
 def exploit_detail():
+    id = request.args.get("id")
     return render_template("exploit_detail.html",data="this is data")
 
 @app.route("/host/getAllHost")
 def getAllHost():
-    print(scanner.get_all_host())
     return jsonify(scanner.get_all_host())
+
+@app.route("/host/detail")
+def host_detail():
+    ip = request.args.get("ip")
+    return scanner.get_host_detail(ip)
 
 @app.after_request
 def set_response_headers(response):

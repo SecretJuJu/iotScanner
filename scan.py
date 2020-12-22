@@ -1,12 +1,14 @@
-import nmap
+from nmap.nmap.nmap import PortScanner
 
 class Scanner() :
-     nm = nmap.PortScanner()
+     nm = PortScanner()
      def get_all_host(self):
+         print("---- get all host ----")
          host_list = self.nm.all_hosts()
-         for host in host_list:
-             if 'mac' in self.nm[host]['addresses']:
-                 print(host + ' : ' + self.nm[host]['addresses']['mac'])
+         for h in host_list:
+             print(h)
+             if 'mac' in self.nm[h]['addresses']:
+                 print(self.nm[h]['addresses'], self.nm[h]['vendor'])
 
          retData = []
          for ip in self.nm.all_hosts():
@@ -20,9 +22,20 @@ class Scanner() :
 
              status = host['status']['state']
              rHost = {'ip': ip, 'mac': mac, 'vendor': vendorName, 'status': status}
+             print("----- rHost -----")
+             print(rHost)
              retData.append(rHost)
          return retData
 
 
      def host_scan(self,host,argument):
          return self.nm.scan(hosts=host,arguments=argument)
+
+     def get_host_detail(self,ip):
+         host_list = self.nm.all_hosts()
+         for ip in host_list:
+             print (ip)
+         return "done"
+
+     def refresh_host_detail(self,ip):
+         print("test")
