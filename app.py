@@ -33,11 +33,6 @@ def get_all_mac_addr():
         print(r)
     return jsonify(rows)
 
-@app.route("/exploit/detail")
-def exploit_detail():
-    id = request.args.get("id")
-    return render_template("exploit_detail.html",data="this is data")
-
 @app.route("/host/getAllHost")
 def getAllHost():
     return jsonify(scanner.get_all_host())
@@ -46,6 +41,12 @@ def getAllHost():
 def host_detail():
     ip = request.args.get("ip")
     return scanner.get_host_detail(ip)
+
+@app.route("/exploit/detail")
+def exploit_detail():
+    id = request.args.get("id")
+
+    return render_template("exploit_detail.html",data="this is data")
 
 @app.after_request
 def set_response_headers(response):
