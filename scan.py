@@ -30,18 +30,13 @@ class Scanner() :
 
      def get_host_detail(self,ip):
          host_list = self.nm.all_hosts()
+         print("find ip")
+         print(ip)
          for h in host_list:
-             print(h)
              if str(ip) == str(h):
+                 print("ip founded")
                  host = self.nm[ip]
-                 mac = "-"
-                 vendorName = "-"
-                 if 'mac' in host['addresses']:
-                     mac = host['addresses']['mac']
-
-                 status = host['status']['state']
-                 rHost = {'ip': ip, 'mac': mac, 'status': status}
-                 return rHost
+                 return host
          return False
 
 
@@ -51,8 +46,7 @@ class Scanner() :
 
          for h in host_list:
              if str(ip) == str(h):
-                 host = self.nm[ip]
                  self.nm.scan(ip,arguments="-sS")
                  return self.nm[ip]
 
-         return "done"
+         return False

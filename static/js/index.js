@@ -54,10 +54,39 @@ const refresh_host_list = function(data) {
 
 }
 
+Current_host_detail_ip = ""
+
+var test = {}
 const about_host = function (ip){
-    console.log("this is about_host")
-    console.log(ip)
+    Current_host_detail_ip = ip
+    url = "/host/detail?ip="+ip
+    fetch(url).then(res =>{
+        res.json().then(data=>{
+            document.querySelector(".main .cont .right ul.host_detail li:nth-child(1)>span").innerText = data.addresses.ipv4
+            document.querySelector(".main .cont .right ul.host_detail li:nth-child(2)>span").innerText = data.addresses.mac
+            document.querySelector(".main .cont .right ul.host_detail li:nth-child(3)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
+            document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText=""
+            Object.keys(data.tcp).forEach(e=>{
+                document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText+="\n"+e+"->"+data.tcp[e].name
+            })
+            test = data
+        }).catch(err=>{
+            console.log(err)
+        })
+    }).catch(err => {console.log(err)})
 }
+
+const refresh_host_detail = function () {
+    url = "/host/refresh_detail?ip="+Current_host_detail_ip
+    fetch(url).then(res=>{
+        res.json().then(data => {
+            console.log(Object.keys(data.tcp))
+        })
+        .catch(err => {console.log(err)})
+    }).catch(err => {console.log(err)})
+}
+
+
 window.onload = function(){
     url = "/host/getAllHost"
     fetch(url).then(res =>{
@@ -68,28 +97,3 @@ window.onload = function(){
         })
     }).catch(err => {console.log(err)})
 }
-
-window.onload = function(){
-    url = "/host/detail?ip="
-    fetch(url).then(res =>{
-        res.json().then(data=>{
-            refresh_host_list(data)
-        }).catch(err=>{
-            console.log(err)
-        })
-    }).catch(err => {console.log(err)})
-}
-
-function textLengthOverCut(txt, len, lastTxt) {
-        if (len == "" || len == null) {
-            len = 20;
-        }
-        if (lastTxt == "" || lastTxt == null) {
-            lastTxt = "...";
-        }
-        if (txt.length > len) {
-            txt = txt.substr(0, len) + lastTxt;
-        }
-        return txt;
-    }
-
