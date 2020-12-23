@@ -8,11 +8,17 @@ import fleep
 import sys
 import os
 import time
+import zipfile
+
+
 
 app = Flask(__name__)
 scanner = Scanner()
 dbCon = sqlite3.connect("database/scanner.db", check_same_thread=False)
 dbCur = dbCon.cursor()
+
+EXCUTE_FILE_NAME = "run.py"
+
 @app.route("/",methods=["GET"])
 def index():
     return render_template("index.html",data={"all_host":jsonify(scanner.get_all_host())})
@@ -69,19 +75,27 @@ def exploit_detail():
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
     if request.method == "POST":
-        tmp_file_name = str(time.time())
         file = request.files['file']
-        file.save("exploit/"+tmp_file_name)
-        with open("exploit/"+tmp_file_name, "rb") as file:
-            info = fleep.get(file.read(128))
-
+        tmp_file_path = "exploit"+str(time.time())
+        file.save(tmp_file_path)
+        print (request.form)
+        with open(tmp_file_path, "rb") as f:
+            info = fleep.get(f.read(128))
+            data = f.read()
+            f.close()
         if ("zip" in info.extension):
             print("file extention is right")
+            print(request.form)
+            path = "exploit/"+hashlib.md5(data).hexdigest()+"/"
+            with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
+                zip_ref.extractall(path=path)
+                sql = "insert into Exploit ()"
             return jsonify(True)
         else :
             return jsonify(False)
     elif request.method == "GET":
         return render_template("exploit_upload.html")
+
 
 
 @app.after_request
