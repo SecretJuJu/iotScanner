@@ -8,10 +8,11 @@ CREATE TABLE MacVender(
 
 CREATE TABLE Exploit(
     id integer primary key autoincrement,
-    name char(50),
+    name char(50) not null,
     company char(50),
     version char(30),
     productName char(50),
+    args text not null, -- this is json
     exploitMovement text,
-    path char(255)
+    path char(255) unique
 );
