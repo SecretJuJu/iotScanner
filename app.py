@@ -62,17 +62,25 @@ def exploit_detail():
     row = dbCur.fetchone()
     return render_template("exploit_detail.html",data=row)
 
-@app.route("/exploit/upload",methods=["POST"])
+@app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
-    file = request.files["File"]
-    return "Test"
+    if request.method == "POST":
+        sql = "select id from Exploit where rowid=last_insert_rowid()"
+        dbCur.execute(sql)
+        currentid = dbCur.fetchone()
+        print(currentid)
+        file = request.files["File"]
+        sql = "insert into Exploit (name,company,productName,exploitMovement,path) values (?,?,?,?);"
+        return "Test"
+    elif request.method == "GET":
+        return render_template("exploit_upload.html")
+
 
 @app.after_request
 def set_response_headers(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
-    sql = "select "
     return response
 
 
