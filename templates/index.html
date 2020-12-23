@@ -45,6 +45,7 @@
 
                             </span>
                         </li>
+                        </br>
                         <li>
                             <strong>
                                 MAC ADDR
@@ -54,6 +55,7 @@
 
                             </span>
                         </li>
+                        </br>
                         <li>
                             <strong>
                                 COMPANY
@@ -63,16 +65,67 @@
 
                             </span>
                         </li>
-
+                        </br>
                         <li>
                             <strong>PORTS</strong>
                             <button onclick="refresh_host_detail()">
                                 refresh
                             </button>
-                            <p>
-
-                            </p>
                         </li>
+                        <br/>
+                        <span class='green_window'>
+                        <input id=text type="text" class='input_text' name="search" onkeydown="enterSearch()"/></span>
+                        <input type="button" class='sch_smit' value="검색" onclick="myFunction()"/>
+<!-- JAVASCRIPT -->
+                        <script type="text/javascript">
+                        function enterSearch() {
+                          if(event.keyCode == 13){
+                              myFunction();  // 실행할 이벤트
+                        }
+                        }
+                        function myFunction() {
+                            var x = document.getElementById("text").value;
+                            url = "/exploit/search?keyword="+x
+                            fetch(url).then(res => {
+                                res.json().then(data=> {
+                                    let list = document.querySelector(".y>ul")
+                                    list.innerHTML = ""
+                                    data.forEach(e=> {
+                                        list.innerHTML+=`
+                                        <li>
+                                            <a href="/exploit/detail?id=`+e[0]+`">
+                                                <span>
+                                                    `+e[1]+`
+                                                </span>
+                                                <span>
+                                                    `+e[2]+`
+                                                </span>
+                                                <span>
+                                                    `+e[3]+`
+                                                </span>
+                                                <span>
+                                                    `+e[4]+`
+                                                </span>
+                                            </a>
+                                        </li>
+                                        `
+
+                                        console.log(e)
+                                    })
+                                })
+                                .catch(err => {
+                                    console.log(err)
+                                })
+                            }).catch(err => {
+                                console.log(err)
+                            })
+                        }
+                        </script>
+                        <div class="y">
+                            <ul>
+
+                            </ul>
+                        </div>
                     </ul>
                 </div>
             </div>
