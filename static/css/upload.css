@@ -13,7 +13,7 @@ body{
     background-color: #fff;
     width: 100%;
     max-width: 700px;
-    max-height: 500px;
+    max-height: 900px;
     margin-top:20px;
     padding: 60px;
     margin: auto;
@@ -49,6 +49,22 @@ body{
 }
 
 .form-index input[type="submit"]:hover{
+    color: WHITE;
+    background-color: black;
+}
+
+.form-index button{
+    width:90px;
+    height:30px;
+    border:1px solid silver;
+    background-color: rgba(0,0,0,0);
+    color:black;
+    padding: 5px;
+    margin-top:10px;
+    margin-bottom: 30px;
+}
+
+.form-index button:hover{
     color: WHITE;
     background-color: black;
 }
