@@ -45,16 +45,6 @@ def host_scan():
     scanner.host_scan(host=ip_range,argument="-sP")
     return jsonify(scanner.get_all_host())
 
-@app.route("/host/vender")
-def get_all_mac_addr():
-    macAddr = request.args.get("mac")
-    sql = "select company from MacVender where macAddr = ?"
-    dbCur .execute(sql,[macAddr])
-    rows = dbCur.fetchall()
-    for r in rows:
-        print(r)
-    return jsonify(rows)
-
 @app.route("/host/getAllHost")
 def getAllHost():
     return jsonify(scanner.get_all_host())
@@ -84,7 +74,8 @@ def exploit_detail():
     sql = "select * from Exploit where id=?"
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
-    return render_template("exploit_detail.html",data=row)
+    data = dict(zip([c[0] for c in dbCur.description], row))
+    return render_template("exploit_detail.html",data=data)
 
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
