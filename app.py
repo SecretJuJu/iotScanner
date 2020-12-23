@@ -12,7 +12,6 @@ dbCur = dbCon.cursor()
 app.run(host="0.0.0.0",port=5000,debug=True)
 @app.route("/")
 def index():
-    print("index!")
     return render_template("index.html",data={"all_host":jsonify(scanner.get_all_host())})
 
 ## /scan/host_scan
@@ -64,9 +63,10 @@ def exploit_detail():
     row = dbCur.fetchone()
     return render_template("exploit_detail.html",data=row)
 
-@app.route("/exploit/upload",method=["POST"])
+@app.route("/exploit/upload",methods=["POST"])
 def exploit_upload():
-    request.files["File"]
+    file = request.files["File"]
+    return "Test"
 
 @app.after_request
 def set_response_headers(response):
