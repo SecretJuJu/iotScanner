@@ -14,7 +14,7 @@ button:focus {outline:0;}
 
 .header {
 	height: 76px;
-    border-bottom: 4px solid #ded;
+    border-bottom: 4px solid #000000;
     display : flex;
 }
 
@@ -50,7 +50,7 @@ button:focus {outline:0;}
 .cont .left {
     height: 100%;
     width: 50%;
-    background: #FFFFF3;
+    background: #FFFFFF;
 }
 
 .cont .left ul li {

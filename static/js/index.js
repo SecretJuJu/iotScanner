@@ -70,7 +70,7 @@ window.onload = function(){
 }
 
 window.onload = function(){
-    url = "/host/detail"
+    url = "/host/detail?ip="
     fetch(url).then(res =>{
         res.json().then(data=>{
             refresh_host_list(data)
