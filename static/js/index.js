@@ -70,7 +70,7 @@ window.onload = function(){
 }
 
 window.onload = function(){
-    url = "/host/detail"
+    url = "/host/detail?ip="
     fetch(url).then(res =>{
         res.json().then(data=>{
             refresh_host_list(data)
@@ -79,3 +79,17 @@ window.onload = function(){
         })
     }).catch(err => {console.log(err)})
 }
+
+function textLengthOverCut(txt, len, lastTxt) {
+        if (len == "" || len == null) {
+            len = 20;
+        }
+        if (lastTxt == "" || lastTxt == null) {
+            lastTxt = "...";
+        }
+        if (txt.length > len) {
+            txt = txt.substr(0, len) + lastTxt;
+        }
+        return txt;
+    }
+

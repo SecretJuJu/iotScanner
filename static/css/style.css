@@ -14,7 +14,7 @@ button:focus {outline:0;}
 
 .header {
 	height: 76px;
-    border-bottom: 4px solid #ded;
+    border-bottom: 4px solid #000000;
     display : flex;
 }
 
@@ -42,7 +42,7 @@ button:focus {outline:0;}
 }
 .cont {
     height : 100%;
-    background: #eee;
+    background: #eeeeee;
     display : flex;
     flex-flow : row;
 }
@@ -50,14 +50,14 @@ button:focus {outline:0;}
 .cont .left {
     height: 100%;
     width: 50%;
-    background: #FFFFF3;
+    background: #FFFFFF;
 }
 
 .cont .left ul li {
 
     margin-top : 5px;
     border : 2px solid rgba(0,0,0,0.3);
-    background : #ede;
+    background : #eeddee;
 }
 
 
@@ -66,7 +66,7 @@ button:focus {outline:0;}
     height : 100%;
     padding : 5px;
     padding-left : 30px;
-    background : #E0E3DA;
+    background : #e0e3da;
     border : 0;
 }
 
