@@ -9,8 +9,7 @@ import os
 import time
 import zipfile
 import json
-import threading
-
+import subprocess
 
 
 
@@ -143,8 +142,8 @@ def exploit_exec():
         args += " "+arg+" "
     cmd = "lxterminal -e \"python3 "+data["path"]+"/run.py"+args+";read\""
     print(cmd)
-    t = threading.Thread(target=os.system, args=(cmd))
-    t.start()
+    subprocess.call([cmd])
+    subprocess.call()
     return "done"
 
 @app.after_request
