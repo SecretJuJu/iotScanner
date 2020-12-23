@@ -59,14 +59,18 @@ Current_host_detail_ip = ""
 var test = {}
 
 const set_host_detail = function(data){
-    document.querySelector(".main .cont .right ul.host_detail li:nth-child(1)>span").innerText = data.addresses.ipv4
-    document.querySelector(".main .cont .right ul.host_detail li:nth-child(2)>span").innerText = data.addresses.mac
-    document.querySelector(".main .cont .right ul.host_detail li:nth-child(3)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
-    document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText=""
-    Object.keys(data.tcp).forEach(e=>{
-        document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText+="\n"+e+"->"+data.tcp[e].name
-    })
-    fetch_and_refresh_host_list()
+        console.log(data)
+        document.querySelector(".main .cont .right ul.host_detail>li:nth-child(1)>span").innerText = data.addresses.ipv4
+        document.querySelector(".main .cont .right ul.host_detail>li:nth-child(3)>span").innerText = data.addresses.mac
+        document.querySelector(".main .cont .right ul.host_detail>li:nth-child(5)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
+        document.querySelector(".main .cont .right ul.host_detail>li:nth-child(7)>p").innerText=""
+        if (data.tcp != null) {
+        Object.keys(data.tcp).forEach(e=>{
+            document.querySelector(".main .cont .right ul.host_detail li:nth-child(7)>p").innerText+="\n"+e+"->"+data.tcp[e].name
+        })
+        }
+        fetch_and_refresh_host_list()
+
 }
 
 const about_host = function (ip){
