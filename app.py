@@ -76,7 +76,7 @@ def exploit_detail():
 def exploit_upload():
     if request.method == "POST":
         file = request.files['file']
-        tmp_file_path = "exploit"+str(time.time())
+        tmp_file_path = "exploit/"+str(time.time())
         file.save(tmp_file_path)
         print (request.form)
         with open(tmp_file_path, "rb") as f:
@@ -89,7 +89,8 @@ def exploit_upload():
             path = "exploit/"+hashlib.md5(data).hexdigest()+"/"
             with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
                 zip_ref.extractall(path=path)
-                sql = "insert into Exploit ()"
+                # needs : name,company,version,productName,args(json),exploitMovement,path
+                print (request.form)
             return jsonify(True)
         else :
             return jsonify(False)
