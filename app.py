@@ -9,7 +9,7 @@ app = Flask(__name__)
 scanner = Scanner()
 dbCon = sqlite3.connect("database/scanner.db", check_same_thread=False)
 dbCur = dbCon.cursor()
-
+app.run(host="0.0.0.0",port=5000,debug=True)
 @app.route("/")
 def index():
     print("index!")
@@ -63,6 +63,10 @@ def exploit_detail():
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
     return render_template("exploit_detail.html",data=row)
+
+@app.route("/exploit/upload",method=["POST"])
+def exploit_upload():
+    request.files["File"]
 
 @app.after_request
 def set_response_headers(response):
