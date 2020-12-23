@@ -42,7 +42,7 @@ button:focus {outline:0;}
 }
 .cont {
     height : 100%;
-    background: #eee;
+    background: #eeeeee;
     display : flex;
     flex-flow : row;
 }
@@ -57,7 +57,7 @@ button:focus {outline:0;}
 
     margin-top : 5px;
     border : 2px solid rgba(0,0,0,0.3);
-    background : #ede;
+    background : #eeddee;
 }
 
 
@@ -66,7 +66,7 @@ button:focus {outline:0;}
     height : 100%;
     padding : 5px;
     padding-left : 30px;
-    background : #E0E3DA;
+    background : #e0e3da;
     border : 0;
 }
 
