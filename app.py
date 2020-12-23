@@ -46,6 +46,14 @@ def host_scan():
 def getAllHost():
     return jsonify(scanner.get_all_host())
 
+@app.route("/host/vender")
+def get_all_mac_addr():
+    macAddr = request.args.get("mac")
+    sql = "select company from MacVender where macAddr = ?"
+    dbCur .execute(sql,[macAddr])
+    row = dbCur.fetchone()
+    return jsonify(row)
+
 @app.route("/host/detail")
 def host_detail():
     ip = request.args.get("ip")

@@ -62,7 +62,24 @@ const set_host_detail = function(data){
         console.log(data)
         document.querySelector(".main .cont .right ul.host_detail>li:nth-child(1)>span").innerText = data.addresses.ipv4
         document.querySelector(".main .cont .right ul.host_detail>li:nth-child(3)>span").innerText = data.addresses.mac
-        document.querySelector(".main .cont .right ul.host_detail>li:nth-child(5)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
+        if(data.vendor[Object.keys(data.vendor)[0]]){
+            document.querySelector(".main .cont .right ul.host_detail>li:nth-child(5)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
+        }else if(data.addresses.mac){
+            let tmp = data.addresses.mac.replace(":","").replace(":","").slice(0,5)
+            console.log(tmp)
+            fetch("/host/vender?mac="+tmp).then(res=>{
+                res.json().then(data=>{
+                    document.querySelector(".main .cont .right ul.host_detail>li:nth-child(5)>span").innerText = data
+                    console.log(data)
+                }).catch(err =>{
+                    console.log(err)
+                })
+            }).catch(err => {
+                console.log(err)
+            })
+        }else {
+            document.querySelector(".main .cont .right ul.host_detail>li:nth-child(5)>span").innerText = "mac not founded"
+        }
         document.querySelector(".main .cont .right ul.host_detail>li:nth-child(7)>p").innerText=""
         if (data.tcp != null) {
         Object.keys(data.tcp).forEach(e=>{
