@@ -21,6 +21,18 @@ dbCur = dbCon.cursor()
 
 EXCUTE_FILE_NAME = "run.py"
 
+def from_sqlite_Row_to_dict(list_with_rows):
+    ''' Turn a list with sqlite3.Row objects into a dictionary'''
+    d ={} # the dictionary to be filled with the row data and to be returned
+
+    for i, row in enumerate(list_with_rows): # iterate throw the sqlite3.Row objects
+        l = [] # for each Row use a separate list
+        for col in range(0, len(row)): # copy over the row date (ie. column data) to a list
+            l.append(row[col])
+        d[i] = l # add the list to the dictionary
+    return d
+
+
 @app.route("/",methods=["GET"])
 def index():
     return render_template("index.html",data={"all_host":jsonify(scanner.get_all_host())})
@@ -134,13 +146,18 @@ def exploit_exec():
     sql = "select * from Exploit where id=? ;"
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
+    data = dict(zip([c[0] for c in dbCur.description], row))
+    print(data)
+    script_descriptor = open(data["path"]+EXCUTE_FILE_NAME)
+    a_script = script_descriptor.read()
+    print("contain")
+    print(a_script)
+    script_descriptor.close()
+    os.system("xterm -e \"python "+data["path"]+"/run.py"+"\"")
 
-    #script_descriptor = open("a_script.py")
-    #a_script = script_descriptor.read()
     #sys.argv = ["a_script.py", "arg1", "arg2", "arg3"]
     #exec(a_script)
-
-    print(row)
+    return "done"
 
 @app.after_request
 def set_response_headers(response):
