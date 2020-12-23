@@ -9,6 +9,8 @@ import sys
 import os
 import time
 import zipfile
+import json
+
 
 
 
@@ -75,6 +77,9 @@ def exploit_detail():
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
     if request.method == "POST":
+        # code 1 : not a zip file
+        # code 2 : already exist
+        # code 3 : etc (check your contents)
         file = request.files['file']
         tmp_file_path = "exploit/"+str(time.time())
         file.save(tmp_file_path)
@@ -84,19 +89,36 @@ def exploit_upload():
             f.close()
         if ("zip" in info.extension):
             print("file extention is right")
-            path = "exploit/"+hashlib.md5(data).hexdigest()+"/"
+            path = "exploit/"+hashlib.md5(data).hexdigest()
+            if (os.path.isdir(path)):
+                return jsonify({"result":False,"code":2})
+            path += "/"
             with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
                 zip_ref.extractall(path=path)
                 # needs : name,company,version,productName,args(json),exploitMovement,path
-                print(request.form)
-                print(request.form.to_dict())
-            return jsonify(True)
+                try:
+                    name = request.form.get("name")
+                    company = request.form.get("company")
+                    version = request.form.get("version")
+                    productName = request.form.get("productName")
+                    args = request.form.getlist("args[]")
+                    args_json = json.dumps(args)
+                    print("---- args_json ----")
+                    exploitMovement = request.form.get("exploitMovement")
+                    sql = "insert into Exploit (name,company,version,productName,args,exploitMovement,path) values (?,?,?,?,?,?,?);"
+                    dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path])
+                    dbCon.commit()
+                except Exception as e :
+                    return jsonify({"result":False,"code":3})
+            return jsonify({"result":True})
         else :
-            return jsonify(False)
+            return jsonify({"result":False,"code":1})
     elif request.method == "GET":
         return render_template("exploit_upload.html")
 
-
+@app.route("/exploit/exec",methods=["POST"])
+def exploit_exec():
+    return "test"
 
 @app.after_request
 def set_response_headers(response):
