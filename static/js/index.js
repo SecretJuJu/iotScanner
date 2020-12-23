@@ -67,5 +67,15 @@ window.onload = function(){
             console.log(err)
         })
     }).catch(err => {console.log(err)})
-    
+}
+
+window.onload = function(){
+    url = "/host/detail"
+    fetch(url).then(res =>{
+        res.json().then(data=>{
+            refresh_host_list(data)
+        }).catch(err=>{
+            console.log(err)
+        })
+    }).catch(err => {console.log(err)})
 }
