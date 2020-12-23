@@ -9,8 +9,7 @@ import os
 import time
 import zipfile
 import json
-from subprocess import *
-
+import subprocess
 
 app = Flask(__name__)
 scanner = Scanner()
@@ -142,8 +141,9 @@ def exploit_exec():
     args = ""
     for arg in json.loads(data["args"]):
         args += " "+arg+" "
-    pid = Popen(args=[
-    "lxterminal", "--command=python3 "+data["path"]+"/run.py"+args+";read"], shell=True).pid
+    cmd = "lxterminal --wait -- python3 "+data["path"]+"/run.py"
+    subprocess.check_output(cmd, shell=True)
+
     return "done"
 
 @app.after_request
