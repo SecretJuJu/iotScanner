@@ -78,19 +78,18 @@ def exploit_upload():
         file = request.files['file']
         tmp_file_path = "exploit/"+str(time.time())
         file.save(tmp_file_path)
-        print (request.form)
         with open(tmp_file_path, "rb") as f:
             info = fleep.get(f.read(128))
             data = f.read()
             f.close()
         if ("zip" in info.extension):
             print("file extention is right")
-            print(request.form)
             path = "exploit/"+hashlib.md5(data).hexdigest()+"/"
             with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
                 zip_ref.extractall(path=path)
                 # needs : name,company,version,productName,args(json),exploitMovement,path
-                print (request.form)
+                print(request.form)
+                print(request.form.to_dict())
             return jsonify(True)
         else :
             return jsonify(False)
