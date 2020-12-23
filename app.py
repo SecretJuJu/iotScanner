@@ -1,9 +1,13 @@
-
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, Flask, jsonify
 )
 from scan import Scanner
 import sqlite3
+import hashlib
+import fleep
+import sys
+import os
+import time
 
 app = Flask(__name__)
 scanner = Scanner()
@@ -65,13 +69,17 @@ def exploit_detail():
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
     if request.method == "POST":
-        sql = "select id from Exploit where rowid=last_insert_rowid()"
-        dbCur.execute(sql)
-        currentid = dbCur.fetchone()
-        print(currentid)
-        file = request.files["File"]
-        sql = "insert into Exploit (name,company,productName,exploitMovement,path) values (?,?,?,?);"
-        return "Test"
+        tmp_file_name = str(time.time())
+        file = request.files['file']
+        file.save("exploit/"+tmp_file_name)
+        with open("exploit/"+tmp_file_name, "rb") as file:
+            info = fleep.get(file.read(128))
+
+        if ("zip" in info.extension):
+            print("file extention is right")
+            return jsonify(True)
+        else :
+            return jsonify(False)
     elif request.method == "GET":
         return render_template("exploit_upload.html")
 
