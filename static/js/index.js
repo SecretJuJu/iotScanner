@@ -66,6 +66,7 @@ const set_host_detail = function(data){
     Object.keys(data.tcp).forEach(e=>{
         document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText+="\n"+e+"->"+data.tcp[e].name
     })
+    fetch_and_refresh_host_list()
 }
 
 const about_host = function (ip){
@@ -90,8 +91,7 @@ const refresh_host_detail = function () {
     }).catch(err => {console.log(err)})
 }
 
-
-window.onload = function(){
+const fetch_and_refresh_host_list = function () {
     url = "/host/getAllHost"
     fetch(url).then(res =>{
         res.json().then(data=>{
@@ -100,4 +100,7 @@ window.onload = function(){
             console.log(err)
         })
     }).catch(err => {console.log(err)})
+}
+window.onload = function(){
+   fetch_and_refresh_host_list()
 }

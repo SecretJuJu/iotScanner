@@ -134,17 +134,16 @@ def exploit_upload():
 def exploit_exec():
     id = request.form.get("id")
     args = request.form.getlist("args[]")
-    sql = "select * from Exploit where id=? ;"
+    sql = "select * from Exploit where id=?;"
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
     data = dict(zip([c[0] for c in dbCur.description], row))
-    print(data)
-    script_descriptor = open(data["path"]+EXCUTE_FILE_NAME)
-    a_script = script_descriptor.read()
-    print("contain")
-    print(a_script)
-    script_descriptor.close()
-    os.system("xterm -e \"python "+data["path"]+"/run.py"+"\"")
+    args = ""
+    for arg in json.loads(data["args"]):
+        args += " "+arg+" "
+    cmd = "xterm -e \"python "+data["path"]+"/run.py"+args+"\""
+    print(cmd)
+    os.system(cmd)
 
     #sys.argv = ["a_script.py", "arg1", "arg2", "arg3"]
     #exec(a_script)
