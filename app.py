@@ -9,6 +9,8 @@ import sys
 import os
 import time
 import zipfile
+import json
+
 
 
 
@@ -75,28 +77,70 @@ def exploit_detail():
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
     if request.method == "POST":
-        file = request.files['file']
-        tmp_file_path = "exploit/"+str(time.time())
-        file.save(tmp_file_path)
-        with open(tmp_file_path, "rb") as f:
-            info = fleep.get(f.read(128))
-            data = f.read()
-            f.close()
-        if ("zip" in info.extension):
-            print("file extention is right")
-            path = "exploit/"+hashlib.md5(data).hexdigest()+"/"
-            with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
-                zip_ref.extractall(path=path)
-                # needs : name,company,version,productName,args(json),exploitMovement,path
-                print(request.form)
-                print(request.form.to_dict())
-            return jsonify(True)
-        else :
-            return jsonify(False)
+        tmp_file_path = ""
+            # code 1 : not a zip file
+            # code 2 : already exist
+            # code 3 : file didn't uploaded
+            # code 4 : etc (check your contents)
+        try:
+            file = request.files['file']
+            tmp_file_path = "exploit/"+str(time.time())
+            file.save(tmp_file_path)
+        except Exception as e:
+            return jsonify({"result":False,"code":3})
+        try :
+            with open(tmp_file_path, "rb") as f:
+                info = fleep.get(f.read(128))
+                data = f.read()
+                f.close()
+            if ("zip" in info.extension):
+                print("file extention is right")
+                path = "exploit/"+hashlib.md5(data).hexdigest()
+                if (os.path.isdir(path)):
+                    return jsonify({"result":False,"code":2})
+                path += "/"
+                with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
+                    zip_ref.extractall(path=path)
+                    # needs : name,company,version,productName,args(json),exploitMovement,path
+                    try:
+                        name = request.form.get("name")
+                        company = request.form.get("company")
+                        version = request.form.get("version")
+                        productName = request.form.get("productName")
+                        args = request.form.getlist("args[]")
+                        args_json = json.dumps(args)
+                        exploitMovement = request.form.get("exploitMovement")
+                        sql = "insert into Exploit (name,company,version,productName,args,exploitMovement,path) values (?,?,?,?,?,?,?);"
+                        last_id = dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path]).lastrowid
+                        dbCon.commit()
+                    except Exception as e :
+                        return jsonify({"result":False,"code":4})
+                return jsonify({"result":True,"id":last_id})
+            else :
+                return jsonify({"result":False,"code":1})
+        except Exception as e :
+            return jsonify({"result":False,"code":4})
+        finally :
+            print("remove tmp file")
+            os.remove(tmp_file_path)
+
     elif request.method == "GET":
         return render_template("exploit_upload.html")
 
+@app.route("/exploit/exec",methods=["POST"])
+def exploit_exec():
+    id = request.form.get("id")
+    args = request.form.getlist("args[]")
+    sql = "select * from Exploit where id=? ;"
+    dbCur.execute(sql,[id])
+    row = dbCur.fetchone()
 
+    #script_descriptor = open("a_script.py")
+    #a_script = script_descriptor.read()
+    #sys.argv = ["a_script.py", "arg1", "arg2", "arg3"]
+    #exec(a_script)
+
+    print(row)
 
 @app.after_request
 def set_response_headers(response):
