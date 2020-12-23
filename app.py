@@ -7,8 +7,8 @@ import sqlite3
 
 app = Flask(__name__)
 scanner = Scanner()
-macMapConn = sqlite3.connect("./database/macMap.db", check_same_thread=False)
-macMapCur = macMapConn.cursor()
+dbCon = sqlite3.connect("database/scanner.db", check_same_thread=False)
+dbCur = dbCon.cursor()
 
 @app.route("/")
 def index():
@@ -26,9 +26,9 @@ def host_scan():
 @app.route("/host/vender")
 def get_all_mac_addr():
     macAddr = request.args.get("mac")
-    sql = "select * from MacVender where macAddr = ?"
-    macMapCur.execute(sql,[macAddr])
-    rows = macMapCur.fetchall()
+    sql = "select company from MacVender where macAddr = ?"
+    dbCur .execute(sql,[macAddr])
+    rows = dbCur.fetchall()
     for r in rows:
         print(r)
     return jsonify(rows)
@@ -40,17 +40,34 @@ def getAllHost():
 @app.route("/host/detail")
 def host_detail():
     ip = request.args.get("ip")
-    return scanner.get_host_detail(ip)
+    return jsonify(scanner.get_host_detail(ip))
+
+@app.route("/host/refresh_detail")
+def refresh_detail():
+    ip = request.args.get("ip")
+    return jsonify(scanner.refresh_host_detail(ip))
+
+@app.route("/exploit/search")
+def exploit_search():
+    keyword = request.args.get("keyword")
+    sql = "select * from Exploit where name like ? or company like ? or productName like ? or exploitMovement like ? or path like ? limit 10"
+    foo = "%"+keyword+"%"
+    dbCur.execute(sql, [foo,foo,foo,foo,foo])
+    rows = dbCur.fetchall()
+    return jsonify(rows)
 
 @app.route("/exploit/detail")
 def exploit_detail():
     id = request.args.get("id")
-
-    return render_template("exploit_detail.html",data="this is data")
+    sql = "select * from Exploit where id=?"
+    dbCur.execute(sql,[id])
+    row = dbCur.fetchone()
+    return render_template("exploit_detail.html",data=row)
 
 @app.after_request
 def set_response_headers(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
+    sql = "select "
     return response
