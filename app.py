@@ -75,7 +75,7 @@ def exploit_detail():
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
     data = dict(zip([c[0] for c in dbCur.description], row))
-    return render_template("exploit_detail.html", name=data["name"], company=data['company'], productName=data['productName'], version=data['version'], exploitMovement=data['exploitMovement'])
+    return render_template("exploit_detail.html", data=data,args=json.loads(data["args"]))
 
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
