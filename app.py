@@ -9,8 +9,7 @@ app = Flask(__name__)
 scanner = Scanner()
 dbCon = sqlite3.connect("database/scanner.db", check_same_thread=False)
 dbCur = dbCon.cursor()
-app.run(host="0.0.0.0",port=5000,debug=True)
-@app.route("/")
+@app.route("/",methods=["GET"])
 def index():
     return render_template("index.html",data={"all_host":jsonify(scanner.get_all_host())})
 
@@ -75,3 +74,6 @@ def set_response_headers(response):
     response.headers['Expires'] = '0'
     sql = "select "
     return response
+
+
+app.run(host='0.0.0.0',debug=True)
