@@ -109,14 +109,13 @@ def exploit_upload():
                         productName = request.form.get("productName")
                         args = request.form.getlist("args[]")
                         args_json = json.dumps(args)
-                        print("---- args_json ----")
                         exploitMovement = request.form.get("exploitMovement")
                         sql = "insert into Exploit (name,company,version,productName,args,exploitMovement,path) values (?,?,?,?,?,?,?);"
-                        dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path])
+                        last_id = dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path]).lastrowid
                         dbCon.commit()
                     except Exception as e :
                         return jsonify({"result":False,"code":4})
-                return jsonify({"result":True})
+                return jsonify({"result":True,"id":last_id})
             else :
                 return jsonify({"result":False,"code":1})
         except Exception as e :
@@ -130,7 +129,18 @@ def exploit_upload():
 
 @app.route("/exploit/exec",methods=["POST"])
 def exploit_exec():
-    return "test"
+    id = request.form.get("id")
+    args = request.form.getlist("args[]")
+    sql = "select * from Exploit where id=? ;"
+    dbCur.execute(sql,[id])
+    row = dbCur.fetchone()
+
+    #script_descriptor = open("a_script.py")
+    #a_script = script_descriptor.read()
+    #sys.argv = ["a_script.py", "arg1", "arg2", "arg3"]
+    #exec(a_script)
+
+    print(row)
 
 @app.after_request
 def set_response_headers(response):
