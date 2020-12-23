@@ -9,7 +9,7 @@ import os
 import time
 import zipfile
 import json
-import subprocess
+import threading
 
 
 
@@ -129,6 +129,9 @@ def exploit_upload():
     elif request.method == "GET":
         return render_template("exploit_upload.html")
 
+def runEx(cmd):
+    os.system(cmd)
+
 @app.route("/exploit/exec",methods=["POST"])
 def exploit_exec():
     id = request.form.get("id")
@@ -142,8 +145,9 @@ def exploit_exec():
         args += " "+arg+" "
     cmd = "lxterminal -e \"python3 "+data["path"]+"/run.py"+args+";read\""
     print(cmd)
-    subprocess.call([cmd])
-    subprocess.call()
+    t1 = threading.Thread(target=runEx, args=(cmd))
+    t1.daemon = True
+    t1.start()
     return "done"
 
 @app.after_request
