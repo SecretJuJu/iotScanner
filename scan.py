@@ -5,8 +5,6 @@ class Scanner() :
      def get_all_host(self):
          print("---- get all host ----")
          host_list = self.nm.all_hosts()
-
-
          retData = []
          for ip in self.nm.all_hosts():
              host = self.nm[ip]
@@ -16,7 +14,6 @@ class Scanner() :
                  mac = host['addresses']['mac']
                  if mac in host['vendor']:
                      vendorName = host['vendor'][mac]
-
              status = host['status']['state']
              rHost = {'ip': ip, 'mac': mac, 'vendor': vendorName, 'status': status}
              print("----- rHost -----")

@@ -5,11 +5,11 @@ from scan import Scanner
 import sqlite3
 import hashlib
 import fleep
-import sys
 import os
 import time
 import zipfile
 import json
+import threading
 
 
 
@@ -141,12 +141,10 @@ def exploit_exec():
     args = ""
     for arg in json.loads(data["args"]):
         args += " "+arg+" "
-    cmd = "xterm -e \"python "+data["path"]+"/run.py"+args+"\""
+    cmd = "lxterminal -e \"python3 "+data["path"]+"/run.py"+args+";read\""
     print(cmd)
-    os.system(cmd)
-
-    #sys.argv = ["a_script.py", "arg1", "arg2", "arg3"]
-    #exec(a_script)
+    t = threading.Thread(target=os.system, args=(cmd))
+    t.start()
     return "done"
 
 @app.after_request
