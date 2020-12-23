@@ -9,8 +9,7 @@ import os
 import time
 import zipfile
 import json
-import threading
-
+from subprocess import *
 
 
 app = Flask(__name__)
@@ -143,11 +142,8 @@ def exploit_exec():
     args = ""
     for arg in json.loads(data["args"]):
         args += " "+arg+" "
-    cmd = "lxterminal -e \"python3 "+data["path"]+"/run.py"+args+";read\""
-    print(cmd)
-    t1 = threading.Thread(target=runEx, args=(cmd))
-    t1.daemon = True
-    t1.start()
+    pid = Popen(args=[
+    "lxterminal", "--command=python3 "+data["path"]+"/run.py"+args+";read"], shell=True).pid
     return "done"
 
 @app.after_request
