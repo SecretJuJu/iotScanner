@@ -57,19 +57,23 @@ const refresh_host_list = function(data) {
 Current_host_detail_ip = ""
 
 var test = {}
+
+const set_host_detail = function(data){
+    document.querySelector(".main .cont .right ul.host_detail li:nth-child(1)>span").innerText = data.addresses.ipv4
+    document.querySelector(".main .cont .right ul.host_detail li:nth-child(2)>span").innerText = data.addresses.mac
+    document.querySelector(".main .cont .right ul.host_detail li:nth-child(3)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
+    document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText=""
+    Object.keys(data.tcp).forEach(e=>{
+        document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText+="\n"+e+"->"+data.tcp[e].name
+    })
+}
+
 const about_host = function (ip){
     Current_host_detail_ip = ip
     url = "/host/detail?ip="+ip
     fetch(url).then(res =>{
         res.json().then(data=>{
-            document.querySelector(".main .cont .right ul.host_detail li:nth-child(1)>span").innerText = data.addresses.ipv4
-            document.querySelector(".main .cont .right ul.host_detail li:nth-child(2)>span").innerText = data.addresses.mac
-            document.querySelector(".main .cont .right ul.host_detail li:nth-child(3)>span").innerText = data.vendor[Object.keys(data.vendor)[0]]
-            document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText=""
-            Object.keys(data.tcp).forEach(e=>{
-                document.querySelector(".main .cont .right ul.host_detail li:nth-child(4)>p").innerText+="\n"+e+"->"+data.tcp[e].name
-            })
-            test = data
+            set_host_detail(data)
         }).catch(err=>{
             console.log(err)
         })
@@ -80,7 +84,7 @@ const refresh_host_detail = function () {
     url = "/host/refresh_detail?ip="+Current_host_detail_ip
     fetch(url).then(res=>{
         res.json().then(data => {
-            console.log(Object.keys(data.tcp))
+            set_host_detail(data)
         })
         .catch(err => {console.log(err)})
     }).catch(err => {console.log(err)})
