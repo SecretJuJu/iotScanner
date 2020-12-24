@@ -85,7 +85,6 @@ def exploit_detail():
 @app.route("/exploit/upload",methods=["GET","POST"])
 def exploit_upload():
     if request.method == "POST":
-        tmp_file_path = ""
             # code 1 : not a zip file
             # code 2 : already exist
             # code 3 : file didn't uploaded
@@ -95,7 +94,7 @@ def exploit_upload():
             tmp_file_path = "exploit/"+str(time.time())
             file.save(tmp_file_path)
         except Exception as e:
-            return jsonify({"result":False,"code":3})
+            return "<script>alert(\'file didn't uploaded\');history.back()</script>"
         try :
             with open(tmp_file_path, "rb") as f:
                 info = fleep.get(f.read(128))
@@ -105,7 +104,7 @@ def exploit_upload():
                 print("file extention is right")
                 path = "exploit/"+hashlib.md5(data).hexdigest()
                 if (os.path.isdir(path)):
-                    return jsonify({"result":False,"code":2})
+                    return "<script>alert(\'already exist\');history.back()</script>"
                 path += "/"
                 with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
                     zip_ref.extractall(path=path)
@@ -122,12 +121,12 @@ def exploit_upload():
                         last_id = dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path]).lastrowid
                         dbCon.commit()
                     except Exception as e :
-                        return jsonify({"result":False,"code":4})
+                        return "<script>alert(\'not a zip file\');history.back()</script>"
                 return "<script>location.href="+last_id+"</script>"
             else :
-                return jsonify({"result":False,"code":1})
+                return "<script>alert(\'not a zip file\');history.back()</script>"
         except Exception as e :
-            return jsonify({"result":False,"code":4})
+            return "<script>alert(\'etc (check your contents)\');history.back()</script>"
         finally :
             print("remove tmp file")
             os.remove(tmp_file_path)
