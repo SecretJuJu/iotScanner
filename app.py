@@ -94,7 +94,7 @@ def exploit_upload():
             tmp_file_path = "exploit/"+str(time.time())
             file.save(tmp_file_path)
         except Exception as e:
-            return "<script>alert('file didn't uploaded');history.back()</script>"
+            return "<script>alert('file didn\'t uploaded');history.back()</script>"
         try :
             with open(tmp_file_path, "rb") as f:
                 info = fleep.get(f.read(128))
