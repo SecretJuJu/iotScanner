@@ -151,7 +151,7 @@ def exploit_exec():
     cmd = "python3 "+data["path"]+"/run.py;read"
     subprocess.Popen(["lxterminal", "-e", cmd])
 
-    return "done"
+    return render_template("result.html")
 
 @app.after_request
 def set_response_headers(response):
