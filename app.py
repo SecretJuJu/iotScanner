@@ -122,7 +122,7 @@ def exploit_upload():
                         dbCon.commit()
                     except Exception as e :
                         return "<script>alert('not a zip file');history.back()</script>"
-                return "<script>location.href="+last_id+"</script>"
+                return "<script>location.href=/exploit/detail?id="+last_id+"</script>"
             else :
                 return "<script>alert('not a zip file');history.back()</script>"
         except Exception as e :
