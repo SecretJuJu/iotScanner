@@ -123,7 +123,7 @@ def exploit_upload():
                         dbCon.commit()
                     except Exception as e :
                         return jsonify({"result":False,"code":4})
-                return jsonify({"result":True,"id":last_id})
+                return "<script>location.href="+last_id+"</script>"
             else :
                 return jsonify({"result":False,"code":1})
         except Exception as e :
