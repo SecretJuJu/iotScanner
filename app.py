@@ -80,6 +80,7 @@ def exploit_detail():
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
     data = dict(zip([c[0] for c in dbCur.description], row))
+    print(data)
     return render_template("exploit_detail.html", data=data,args=json.loads(data["args"]))
 
 @app.route("/exploit/upload",methods=["GET","POST"])
