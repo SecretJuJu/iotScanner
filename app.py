@@ -142,15 +142,15 @@ def runEx(cmd):
 def exploit_exec():
     id = request.form.get("id")
     args = request.form.getlist("args[]")
-    sql = "select * from Exploit where id=?;"
+    sql = "select path from Exploit where id=?;"
     dbCur.execute(sql,[id])
     row = dbCur.fetchone()
     data = dict(zip([c[0] for c in dbCur.description], row))
-    args = ""
-    for arg in json.loads(data["args"]):
-        args += " "+arg+" "
-    cmd = "\"python3 "+data["path"]+"/run.py "+args+" ;read\""
-    subprocess.Popen(["lxterminal", "-e", cmd])
+    s = ""
+    for arg in args:
+        s += " "+arg+" "
+    cmd = "\"python3 "+data["path"]+"/run.py "+s+" ;read\""
+    subprocess.Popen(["lxterminal -e "+cmd])
 
     return render_template("result.html")
 
