@@ -149,7 +149,7 @@ def exploit_exec():
     args = ""
     for arg in json.loads(data["args"]):
         args += " "+arg+" "
-    cmd = "python3 "+data["path"]+"/run.py;read"
+    cmd = "\"python3 "+data["path"]+"/run.py\";read"
     subprocess.Popen(["lxterminal", "-e", cmd])
 
     return render_template("result.html")
