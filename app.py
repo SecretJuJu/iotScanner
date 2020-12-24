@@ -150,7 +150,7 @@ def exploit_exec():
     for arg in args:
         s += " "+arg+" "
     cmd = "\"python3 "+data["path"]+"/run.py "+s+" ;read\""
-    subprocess.Popen(["lxterminal -e "+cmd])
+    subprocess.Popen(["lxterminal -e "+cmd],shell=True)
 
     return render_template("result.html")
 
