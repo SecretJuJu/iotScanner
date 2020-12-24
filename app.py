@@ -121,7 +121,7 @@ def exploit_upload():
                         sql = "insert into Exploit (name,company,version,productName,args,exploitMovement,path) values (?,?,?,?,?,?,?);"
                         last_id = dbCur.execute(sql, [name,company,version,productName,args_json,exploitMovement,path]).lastrowid
                         dbCon.commit()
-                        return "<script>location.href=/exploit/detail?id="+last_id+"</script>"
+                        return "<script>location.href=/exploit/detail?id="+str(last_id)+"</script>"
                     except Exception as e :
                         return "<script>alert('not a zip file');history.back()</script>"
             else :
